@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MiniJava Compiler — User Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --ink:    #1a1a2e;
+    --muted:  #5a607a;
+    --line:   #e2e5ef;
+    --accent: #2563eb;
+    --green:  #16a34a;
+    --red:    #dc2626;
+    --amber:  #d97706;
+    --code-bg:#f0f4ff;
+    --tag-bg: #eff6ff;
+    --page:   #ffffff;
+    --sidebar:#f8f9fc;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'IBM Plex Sans', sans-serif;
+    background:#f0f2f8;
+    color:var(--ink);
+    font-size:15px;
+    line-height:1.75;
+  }
+
+  /* ── Layout ── */
+  .layout { display:flex; min-height:100vh; }
+
+  nav {
+    width:260px;
+    background:var(--sidebar);
+    border-right:1px solid var(--line);
+    padding:32px 0;
+    position:sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+    flex-shrink:0;
+  }
+
+  .nav-logo {
+    padding:0 24px 28px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:20px;
+  }
+  .nav-logo .badge {
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--accent);
+    background:var(--tag-bg);
+    border:1px solid #bfdbfe;
+    padding:3px 8px;
+    border-radius:3px;
+    display:inline-block;
+    margin-bottom:8px;
+  }
+  .nav-logo h2 { font-size:1.05rem; font-weight:700; color:var(--ink); }
+  .nav-logo p  { font-size:0.78rem; color:var(--muted); margin-top:3px; }
+
+  nav ul { list-style:none; }
+  nav ul li a {
+    display:block;
+    padding:7px 24px;
+    color:var(--muted);
+    text-decoration:none;
+    font-size:0.88rem;
+    font-weight:500;
+    border-left:2px solid transparent;
+    transition:all 0.15s;
+  }
+  nav ul li a:hover { color:var(--accent); border-left-color:var(--accent); background:#e8eef8; }
+  nav ul .section-label {
+    padding:18px 24px 6px;
+    font-size:0.72rem;
+    font-weight:700;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:#a0a8c0;
+  }
+
+  main {
+    flex:1;
+    padding:48px 60px 80px;
+    max-width:860px;
+  }
+
+  /* ── Typography ── */
+  h1 { font-size:2.2rem; font-weight:700; letter-spacing:-0.02em; margin-bottom:10px; }
+  h2 { font-size:1.45rem; font-weight:700; margin:52px 0 16px; padding-bottom:10px;
+       border-bottom:2px solid var(--line); }
+  h3 { font-size:1.1rem; font-weight:600; margin:28px 0 10px; color:var(--ink); }
+  h4 { font-size:0.95rem; font-weight:600; margin:20px 0 8px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; }
+  p  { margin-bottom:14px; color:#2d3450; }
+  ul,ol { padding-left:22px; margin-bottom:14px; }
+  li { margin-bottom:6px; }
+
+  /* ── Hero ── */
+  .hero {
+    background:linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%);
+    color:white;
+    padding:36px 40px;
+    border-radius:12px;
+    margin-bottom:40px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::after {
+    content:'{ }';
+    position:absolute;
+    right:32px; top:50%;
+    transform:translateY(-50%);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:5rem;
+    font-weight:600;
+    opacity:0.08;
+    line-height:1;
+  }
+  .hero h1 { color:white; font-size:1.9rem; margin-bottom:6px; }
+  .hero p  { color:#bfdbfe; font-size:0.95rem; margin:0; }
+  .hero-meta { display:flex; gap:16px; margin-top:20px; flex-wrap:wrap; }
+  .hero-meta span {
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.2);
+    padding:4px 10px;
+    border-radius:4px;
+    color:white;
+  }
+
+  /* ── Code ── */
+  pre {
+    background:var(--code-bg);
+    border:1px solid #c7d2fe;
+    border-radius:8px;
+    padding:18px 20px;
+    overflow-x:auto;
+    margin:14px 0 20px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    line-height:1.65;
+    position:relative;
+  }
+  .pre-label {
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:6px;
+    display:block;
+  }
+  code {
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.87em;
+    background:var(--code-bg);
+    border:1px solid #c7d2fe;
+    padding:1px 6px;
+    border-radius:3px;
+    color:#1d4ed8;
+  }
+
+  .kw  { color:#7c3aed; font-weight:600; }
+  .cm  { color:#6b7280; font-style:italic; }
+  .str { color:#15803d; }
+  .num { color:#b45309; }
+  .cl  { color:#0369a1; font-weight:600; }
+
+  /* ── Callouts ── */
+  .callout {
+    border-radius:8px;
+    padding:14px 18px;
+    margin:16px 0;
+    font-size:0.92rem;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    border:1px solid;
+  }
+  .callout-icon { font-size:1.1rem; flex-shrink:0; margin-top:1px; }
+  .callout.info  { background:#eff6ff; border-color:#bfdbfe; color:#1e40af; }
+  .callout.ok    { background:#f0fdf4; border-color:#bbf7d0; color:#15803d; }
+  .callout.warn  { background:#fffbeb; border-color:#fde68a; color:#92400e; }
+  .callout.error { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+
+  /* ── Tables ── */
+  table {
+    width:100%;
+    border-collapse:collapse;
+    margin:16px 0 24px;
+    font-size:0.9rem;
+  }
+  th {
+    background:var(--sidebar);
+    font-weight:600;
+    padding:10px 14px;
+    text-align:left;
+    border:1px solid var(--line);
+    font-size:0.82rem;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--muted);
+  }
+  td {
+    padding:9px 14px;
+    border:1px solid var(--line);
+    vertical-align:top;
+  }
+  tr:nth-child(even) td { background:#f8f9fc; }
+
+  /* ── Pipeline diagram ── */
+  .pipeline {
+    display:flex;
+    align-items:center;
+    gap:4px;
+    flex-wrap:wrap;
+    margin:20px 0;
+    row-gap:10px;
+  }
+  .pipe-box {
+    background:var(--code-bg);
+    border:1.5px solid #c7d2fe;
+    border-radius:6px;
+    padding:8px 14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    font-weight:600;
+    color:#1d4ed8;
+    white-space:nowrap;
+  }
+  .pipe-box.src  { border-color:#86efac; color:#15803d; background:#f0fdf4; }
+  .pipe-box.out  { border-color:#fca5a5; color:#b91c1c; background:#fef2f2; }
+  .pipe-arrow    { color:#94a3b8; font-size:18px; padding:0 2px; }
+
+  /* ── File tree ── */
+  .tree {
+    background:var(--code-bg);
+    border:1px solid #c7d2fe;
+    border-radius:8px;
+    padding:18px 20px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    line-height:2;
+  }
+  .tree .dir  { color:#1d4ed8; font-weight:600; }
+  .tree .file { color:#374151; }
+  .tree .note { color:#9ca3af; }
+
+  /* ── Status badges ── */
+  .badge-ok   { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; padding:2px 8px; border-radius:4px; font-size:0.78rem; font-weight:600; font-family:'IBM Plex Mono',monospace; }
+  .badge-warn { background:#fef9c3; color:#a16207; border:1px solid #fde68a; padding:2px 8px; border-radius:4px; font-size:0.78rem; font-weight:600; font-family:'IBM Plex Mono',monospace; }
+
+  /* ── Section divider ── */
+  hr { border:none; border-top:1px solid var(--line); margin:40px 0; }
+
+  @media (max-width:768px) {
+    .layout { flex-direction:column; }
+    nav { width:100%; height:auto; position:static; }
+    main { padding:32px 20px; }
+    .hero::after { display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ── Sidebar nav ── -->
+<nav>
+  <div class="nav-logo">
+    <div class="badge">v1.0</div>
+    <h2>MiniJava Compiler</h2>
+    <p>User Documentation</p>
+  </div>
+  <ul>
+    <li class="section-label">Getting Started</li>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#install">Installation</a></li>
+    <li><a href="#quickstart">Quick Start</a></li>
+
+    <li class="section-label">Using the Compiler</li>
+    <li><a href="#modes">Compiler Modes</a></li>
+    <li><a href="#commands">Command Reference</a></li>
+    <li><a href="#errors">Error Messages</a></li>
+
+    <li class="section-label">MiniJava Language</li>
+    <li><a href="#syntax">Syntax Reference</a></li>
+    <li><a href="#types">Types</a></li>
+    <li><a href="#operators">Operators</a></li>
+    <li><a href="#statements">Statements</a></li>
+    <li><a href="#classes">Classes & Methods</a></li>
+
+    <li class="section-label">Examples</li>
+    <li><a href="#examples">Sample Programs</a></li>
+    <li><a href="#limitations">Limitations</a></li>
+
+    <li class="section-label">Internals</li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#files">Source Files</a></li>
+  </ul>
+</nav>
+
+<!-- ── Main content ── -->
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>MiniJava Compiler &amp; Interpreter</h1>
+    <p>A clean, self-contained compiler for the MiniJava language — built from scratch, zero dependencies, fully tested.</p>
+    <div class="hero-meta">
+      <span>Java 8+</span>
+      <span>No dependencies</span>
+      <span>6 source files</span>
+      <span>6 test programs</span>
+      <span>Tree-walking interpreter</span>
+    </div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <h2 id="overview">Overview</h2>
+  <p>This is a fully working compiler and interpreter for <strong>MiniJava</strong> — a clean subset of Java designed for teaching compiler construction. It takes a <code>.java</code> source file written in MiniJava syntax, checks it for errors, and executes it.</p>
+
+  <p>The compiler implements every classical phase of a real compiler:</p>
+
+  <div class="pipeline">
+    <div class="pipe-box src">Source (.java)</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-box">Lexer</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-box">Parser</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-box">AST</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-box">Type Checker</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-box">Interpreter</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-box out">Output</div>
+  </div>
+
+  <table>
+    <tr><th>Phase</th><th>What it does</th><th>File</th></tr>
+    <tr><td><strong>Lexer</strong></td><td>Converts raw text into a stream of tokens (keywords, identifiers, operators)</td><td><code>Lexer.java</code></td></tr>
+    <tr><td><strong>Parser</strong></td><td>Reads tokens and builds an Abstract Syntax Tree (AST) using recursive descent</td><td><code>Parser.java</code></td></tr>
+    <tr><td><strong>Type Checker</strong></td><td>Builds a symbol table, checks all types, validates method calls and variable uses</td><td><code>TypeChecker.java</code></td></tr>
+    <tr><td><strong>Interpreter</strong></td><td>Walks the AST and executes it — runs classes, methods, loops, arrays, and inheritance</td><td><code>Interpreter.java</code></td></tr>
+  </table>
+
+  <!-- INSTALLATION -->
+  <h2 id="install">Installation</h2>
+
+  <h3>Requirements</h3>
+  <p>You only need a <strong>Java Runtime Environment (JRE) or JDK version 8 or higher</strong>. No build tools, no Maven, no Gradle, no extra libraries.</p>
+
+  <div class="callout info">
+    <span class="callout-icon">ℹ</span>
+    <div>To check your Java version, run <code>java -version</code> in a terminal. Any output showing version 8, 11, 17, 21, or higher is fine.</div>
+  </div>
+
+  <h3>Step 1 — Unzip the Package</h3>
+  <span class="pre-label">bash / terminal</span>
+  <pre>unzip MiniJavaCompiler.zip
+cd MiniJavaCompiler</pre>
+
+  <h3>Step 2 — Compile the Compiler</h3>
+  <p>Run the build script for your platform:</p>
+  <span class="pre-label">Linux / macOS</span>
+  <pre>bash build.sh</pre>
+  <span class="pre-label">Windows</span>
+  <pre>build.bat</pre>
+  <p>Or manually:</p>
+  <span class="pre-label">Any platform</span>
+  <pre>javac -d bin src/*.java</pre>
+
+  <div class="callout ok">
+    <span class="callout-icon">✔</span>
+    <div>You should see: <strong>Build successful! Compiler is in bin/</strong> — the <code>bin/</code> folder will now contain all compiled <code>.class</code> files.</div>
+  </div>
+
+  <!-- QUICK START -->
+  <h2 id="quickstart">Quick Start</h2>
+  <p>Once built, run any MiniJava program like this:</p>
+
+  <span class="pre-label">Run a program</span>
+  <pre>java -cp bin MiniJava test/Factorial.java</pre>
+
+  <p>Expected output:</p>
+  <span class="pre-label">output</span>
+  <pre>3628800</pre>
+
+  <p>Try all the included test programs:</p>
+  <span class="pre-label">bash</span>
+  <pre>java -cp bin MiniJava test/Fibonacci.java
+java -cp bin MiniJava test/BubbleSort.java
+java -cp bin MiniJava test/Inheritance.java
+java -cp bin MiniJava test/LinearSearch.java
+java -cp bin MiniJava test/Counter.java</pre>
+
+  <!-- MODES -->
+  <h2 id="modes">Compiler Modes</h2>
+  <p>The compiler has four modes, selected with a flag before the filename:</p>
+
+  <table>
+    <tr><th>Flag</th><th>Mode</th><th>What it shows</th></tr>
+    <tr><td><code>(none)</code></td><td>Run</td><td>Compiles and runs the program, printing output to console</td></tr>
+    <tr><td><code>--lex</code></td><td>Lex</td><td>Runs only the lexer and prints all tokens with their types and positions</td></tr>
+    <tr><td><code>--parse</code></td><td>Parse</td><td>Runs lexer + parser and prints a summary of the AST structure</td></tr>
+    <tr><td><code>--check</code></td><td>Type Check</td><td>Runs lexer + parser + type checker and reports any type errors</td></tr>
+  </table>
+
+  <h3>Example: Lex Mode</h3>
+  <span class="pre-label">command</span>
+  <pre>java -cp bin MiniJava --lex test/Factorial.java</pre>
+  <span class="pre-label">output (excerpt)</span>
+  <pre>=== Tokens for: test/Factorial.java ===
+  CLASS                      "class"
+  IDENTIFIER                 "Factorial"
+  LBRACE                     "{"
+  PUBLIC                     "public"
+  STATIC                     "static"
+  ...
+Total: 52 tokens</pre>
+
+  <h3>Example: Parse Mode</h3>
+  <span class="pre-label">command</span>
+  <pre>java -cp bin MiniJava --parse test/Factorial.java</pre>
+  <span class="pre-label">output</span>
+  <pre>=== AST for: test/Factorial.java ===
+Program
+  MainClass: Factorial
+  Class: Fac
+    Method: int compute(int n)
+      Local: int result
+      Statements: 1</pre>
+
+  <h3>Example: Type Check Mode</h3>
+  <span class="pre-label">command</span>
+  <pre>java -cp bin MiniJava --check test/Factorial.java</pre>
+  <span class="pre-label">output</span>
+  <pre>Type check passed for: test/Factorial.java</pre>
+
+  <!-- COMMANDS -->
+  <h2 id="commands">Command Reference</h2>
+  <span class="pre-label">full syntax</span>
+  <pre>java -cp bin MiniJava [mode] &lt;filename.java&gt;
+
+Modes:
+  (no flag)    Compile and run the program
+  --lex        Show token stream from lexer
+  --parse      Show AST structure from parser
+  --check      Run type checker only
+  --help       Show help message
+
+Examples:
+  java -cp bin MiniJava test/Factorial.java
+  java -cp bin MiniJava --lex   myprogram.java
+  java -cp bin MiniJava --parse myprogram.java
+  java -cp bin MiniJava --check myprogram.java</pre>
+
+  <!-- ERRORS -->
+  <h2 id="errors">Error Messages</h2>
+  <p>The compiler produces clear, line-numbered error messages for three categories of problems:</p>
+
+  <h3>Lexer Errors</h3>
+  <p>Triggered by characters the lexer doesn't recognise.</p>
+  <span class="pre-label">example</span>
+  <pre>[MiniJava Error] Lexer error at line 5, col 12: unexpected character '@'</pre>
+
+  <h3>Parser Errors</h3>
+  <p>Triggered by syntax that doesn't match MiniJava grammar rules.</p>
+  <span class="pre-label">example</span>
+  <pre>[MiniJava Error] Parse error at line 8: expected SEMICOLON but got RBRACE ("}")</pre>
+
+  <h3>Type Errors</h3>
+  <p>Triggered by type mismatches, undeclared variables, unknown classes, wrong argument counts, etc.</p>
+  <span class="pre-label">example</span>
+  <pre>[MiniJava Error] Type error at line 9: Arithmetic requires int operands at line 9</pre>
+
+  <div class="callout warn">
+    <span class="callout-icon">⚠</span>
+    <div>All error messages are printed to <strong>stderr</strong>. If you are piping output to a file, use <code>2&gt;&amp;1</code> to capture errors too: <code>java -cp bin MiniJava prog.java &gt; out.txt 2&gt;&amp;1</code></div>
+  </div>
+
+  <hr/>
+
+  <!-- SYNTAX REFERENCE -->
+  <h2 id="syntax">Syntax Reference</h2>
+  <p>MiniJava is a strict subset of Java. A valid MiniJava program has exactly one <strong>main class</strong> followed by zero or more <strong>regular classes</strong>.</p>
+
+  <h3>Program Structure</h3>
+  <span class="pre-label">MiniJava</span>
+  <pre><span class="kw">class</span> <span class="cl">Main</span> {
+    <span class="kw">public static void</span> main(<span class="cl">String</span>[] args) {
+        <span class="cm">// statements here</span>
+        System.out.println(<span class="num">42</span>);
+    }
+}
+
+<span class="kw">class</span> <span class="cl">MyClass</span> {
+    <span class="cm">// field declarations</span>
+    <span class="kw">int</span> x;
+
+    <span class="cm">// method declarations</span>
+    <span class="kw">public int</span> getX() {
+        <span class="kw">return</span> x;
+    }
+}</pre>
+
+  <!-- TYPES -->
+  <h2 id="types">Types</h2>
+  <table>
+    <tr><th>Type</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>int</code></td><td>32-bit integer</td><td><code>int x;</code></td></tr>
+    <tr><td><code>boolean</code></td><td>true or false</td><td><code>boolean flag;</code></td></tr>
+    <tr><td><code>int[]</code></td><td>Integer array (dynamic size)</td><td><code>int[] arr;</code></td></tr>
+    <tr><td><em>ClassName</em></td><td>Reference to an object</td><td><code>MyClass obj;</code></td></tr>
+  </table>
+
+  <div class="callout info">
+    <span class="callout-icon">ℹ</span>
+    <div>MiniJava does <strong>not</strong> support <code>float</code>, <code>double</code>, <code>char</code>, <code>String</code> variables, <code>null</code>, or generic types. Only the four types above are valid.</div>
+  </div>
+
+  <!-- OPERATORS -->
+  <h2 id="operators">Operators</h2>
+  <table>
+    <tr><th>Operator</th><th>Type</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>+</code></td><td>int, int → int</td><td>Addition</td><td><code>a + b</code></td></tr>
+    <tr><td><code>-</code></td><td>int, int → int</td><td>Subtraction</td><td><code>a - b</code></td></tr>
+    <tr><td><code>*</code></td><td>int, int → int</td><td>Multiplication</td><td><code>a * b</code></td></tr>
+    <tr><td><code>/</code></td><td>int, int → int</td><td>Integer division</td><td><code>a / b</code></td></tr>
+    <tr><td><code>&lt;</code></td><td>int, int → boolean</td><td>Less than</td><td><code>a &lt; b</code></td></tr>
+    <tr><td><code>==</code></td><td>any, any → boolean</td><td>Equality</td><td><code>a == b</code></td></tr>
+    <tr><td><code>&amp;&amp;</code></td><td>bool, bool → boolean</td><td>Logical AND (short-circuit)</td><td><code>a &amp;&amp; b</code></td></tr>
+    <tr><td><code>!</code></td><td>bool → boolean</td><td>Logical NOT</td><td><code>!flag</code></td></tr>
+  </table>
+
+  <h3>Operator Precedence (highest to lowest)</h3>
+  <ol>
+    <li><code>!</code> (unary not), postfix <code>.method()</code>, <code>[index]</code>, <code>.length</code></li>
+    <li><code>*</code> &nbsp; <code>/</code></li>
+    <li><code>+</code> &nbsp; <code>-</code></li>
+    <li><code>&lt;</code> &nbsp; <code>==</code></li>
+    <li><code>&amp;&amp;</code></li>
+  </ol>
+
+  <!-- STATEMENTS -->
+  <h2 id="statements">Statements</h2>
+
+  <h3>Print</h3>
+  <span class="pre-label">syntax</span>
+  <pre>System.out.println(<em>expr</em>);</pre>
+  <p>Prints the integer or boolean value of <code>expr</code> followed by a newline.</p>
+
+  <h3>Assignment</h3>
+  <span class="pre-label">syntax</span>
+  <pre><em>identifier</em> = <em>expr</em>;</pre>
+  <p>The variable must be declared in the current method, as a parameter, or as a field of <code>this</code>.</p>
+
+  <h3>Array Assignment</h3>
+  <span class="pre-label">syntax</span>
+  <pre><em>array</em>[<em>index</em>] = <em>expr</em>;</pre>
+
+  <h3>If / Else</h3>
+  <span class="pre-label">syntax</span>
+  <pre><span class="kw">if</span> (<em>cond</em>) <em>statement</em>
+<span class="kw">if</span> (<em>cond</em>) <em>statement</em> <span class="kw">else</span> <em>statement</em></pre>
+  <p>Condition must be a <code>boolean</code>. The else branch is optional.</p>
+
+  <h3>While Loop</h3>
+  <span class="pre-label">syntax</span>
+  <pre><span class="kw">while</span> (<em>cond</em>) <em>statement</em></pre>
+
+  <h3>Block</h3>
+  <span class="pre-label">syntax</span>
+  <pre>{ <em>statement</em> <em>statement</em> ... }</pre>
+  <p>Groups multiple statements. Often used with if/else and while.</p>
+
+  <!-- CLASSES -->
+  <h2 id="classes">Classes &amp; Methods</h2>
+
+  <h3>Declaring a Class</h3>
+  <span class="pre-label">MiniJava</span>
+  <pre><span class="kw">class</span> <span class="cl">Animal</span> {
+    <span class="kw">int</span> legs;           <span class="cm">// field</span>
+
+    <span class="kw">public int</span> getLegs() {
+        <span class="kw">return</span> legs;
+    }
+}</pre>
+
+  <h3>Inheritance</h3>
+  <span class="pre-label">MiniJava</span>
+  <pre><span class="kw">class</span> <span class="cl">Dog</span> <span class="kw">extends</span> <span class="cl">Animal</span> {
+    <span class="kw">public int</span> speak() {
+        <span class="kw">return</span> <span class="num">1</span>;   <span class="cm">// 1 means "woof"</span>
+    }
+}</pre>
+  <p>A subclass inherits all fields and methods from its superclass. Method overriding is supported.</p>
+
+  <h3>Creating Objects</h3>
+  <span class="pre-label">MiniJava</span>
+  <pre><span class="cl">Dog</span> d;
+d = <span class="kw">new</span> <span class="cl">Dog</span>();
+System.out.println(d.speak());</pre>
+
+  <h3>Method Rules</h3>
+  <ul>
+    <li>All methods must be <code>public</code></li>
+    <li>Every method must end with a <code>return</code> statement</li>
+    <li>Variable declarations must come <em>before</em> statements in method bodies</li>
+    <li>Methods can call other methods on <code>this</code> or on other objects</li>
+    <li>Recursion is fully supported</li>
+  </ul>
+
+  <h3>Arrays</h3>
+  <span class="pre-label">MiniJava</span>
+  <pre><span class="kw">int</span>[] arr;
+arr = <span class="kw">new int</span>[<span class="num">10</span>];    <span class="cm">// allocate 10 elements (all zero)</span>
+arr[<span class="num">0</span>] = <span class="num">42</span>;         <span class="cm">// set element</span>
+System.out.println(arr[<span class="num">0</span>]);   <span class="cm">// read element</span>
+System.out.println(arr.length); <span class="cm">// get length</span></pre>
+
+  <hr/>
+
+  <!-- EXAMPLES -->
+  <h2 id="examples">Sample Programs</h2>
+
+  <h3>1. Factorial — Recursion</h3>
+  <span class="pre-label">test/Factorial.java &nbsp;→ output: 3628800</span>
+  <pre><span class="kw">class</span> <span class="cl">Factorial</span> {
+    <span class="kw">public static void</span> main(<span class="cl">String</span>[] a) {
+        System.out.println(<span class="kw">new</span> <span class="cl">Fac</span>().compute(<span class="num">10</span>));
+    }
+}
+<span class="kw">class</span> <span class="cl">Fac</span> {
+    <span class="kw">public int</span> compute(<span class="kw">int</span> n) {
+        <span class="kw">int</span> result;
+        <span class="kw">if</span> (n < <span class="num">1</span>)
+            result = <span class="num">1</span>;
+        <span class="kw">else</span>
+            result = n * (<span class="kw">this</span>.compute(n - <span class="num">1</span>));
+        <span class="kw">return</span> result;
+    }
+}</pre>
+
+  <h3>2. Fibonacci — Multiple Recursion</h3>
+  <span class="pre-label">test/Fibonacci.java &nbsp;→ output: 0, 1, 55</span>
+  <pre><span class="kw">class</span> <span class="cl">Fib</span> {
+    <span class="kw">public int</span> compute(<span class="kw">int</span> n) {
+        <span class="kw">int</span> result;
+        <span class="kw">if</span> (n < <span class="num">2</span>)
+            result = n;
+        <span class="kw">else</span>
+            result = <span class="kw">this</span>.compute(n - <span class="num">1</span>) + <span class="kw">this</span>.compute(n - <span class="num">2</span>);
+        <span class="kw">return</span> result;
+    }
+}</pre>
+
+  <h3>3. BubbleSort — Arrays &amp; Nested Loops</h3>
+  <span class="pre-label">test/BubbleSort.java &nbsp;→ output: 1 2 3 4 5</span>
+  <p>Fills an array with <code>[5,4,3,2,1]</code> and sorts it in-place using bubble sort, then prints each element.</p>
+
+  <h3>4. Inheritance — extends &amp; Override</h3>
+  <span class="pre-label">test/Inheritance.java &nbsp;→ output: 1, 2, 4</span>
+  <p>Dog and Cat both extend Animal. Each overrides <code>speak()</code> and inherits <code>legs()</code>.</p>
+
+  <h3>5. LinearSearch — Boolean Logic</h3>
+  <span class="pre-label">test/LinearSearch.java &nbsp;→ output: 1, 0</span>
+  <p>Searches an array <code>[0, 3, 6, 9, ...]</code> for a target value, returns 1 if found, 0 if not.</p>
+
+  <h3>6. Counter — Object Fields</h3>
+  <span class="pre-label">test/Counter.java &nbsp;→ output: 5, 0</span>
+  <p>Demonstrates reading and writing object fields across multiple method calls on the same object.</p>
+
+  <!-- LIMITATIONS -->
+  <h2 id="limitations">Limitations</h2>
+  <p>MiniJava is intentionally a <em>subset</em> of Java. The following Java features are <strong>not supported</strong>:</p>
+
+  <table>
+    <tr><th>Feature</th><th>Status</th><th>Workaround</th></tr>
+    <tr><td><code>for</code> loop</td><td><span class="badge-warn">Not supported</span></td><td>Use <code>while</code> loop</td></tr>
+    <tr><td><code>i++</code> / <code>i--</code></td><td><span class="badge-warn">Not supported</span></td><td>Use <code>i = i + 1</code></td></tr>
+    <tr><td><code>String</code> variables</td><td><span class="badge-warn">Not supported</span></td><td>Use <code>int</code> codes</td></tr>
+    <tr><td><code>float</code> / <code>double</code></td><td><span class="badge-warn">Not supported</span></td><td>Use integer arithmetic</td></tr>
+    <tr><td>Multiple classes per file</td><td><span class="badge-ok">Supported</span></td><td>All classes in one file</td></tr>
+    <tr><td><code>null</code> value</td><td><span class="badge-warn">Not supported</span></td><td>Use 0 or a sentinel int</td></tr>
+    <tr><td>Static methods (besides main)</td><td><span class="badge-warn">Not supported</span></td><td>Use instance methods</td></tr>
+    <tr><td>Multiple inheritance</td><td><span class="badge-warn">Not supported</span></td><td>Single extends only</td></tr>
+    <tr><td><code>&gt;</code> <code>&gt;=</code> <code>&lt;=</code> <code>||</code></td><td><span class="badge-warn">Not supported</span></td><td>Flip operands or use <code>!</code> + <code>&amp;&amp;</code></td></tr>
+    <tr><td>Interfaces / abstract</td><td><span class="badge-warn">Not supported</span></td><td>Use concrete classes</td></tr>
+  </table>
+
+  <hr/>
+
+  <!-- ARCHITECTURE -->
+  <h2 id="architecture">Architecture</h2>
+
+  <h3>Compiler Pipeline</h3>
+  <p>The compiler is structured as a clean linear pipeline. Each phase reads from the previous phase's output and produces a new representation:</p>
+
+  <table>
+    <tr><th>Phase</th><th>Input</th><th>Output</th><th>Key class</th></tr>
+    <tr><td>Lexical Analysis</td><td>Raw source string</td><td><code>List&lt;Token&gt;</code></td><td><code>Lexer</code></td></tr>
+    <tr><td>Parsing</td><td><code>List&lt;Token&gt;</code></td><td><code>AST.Program</code></td><td><code>Parser</code></td></tr>
+    <tr><td>Type Checking</td><td><code>AST.Program</code></td><td>Validated (side-effect)</td><td><code>TypeChecker</code></td></tr>
+    <tr><td>Interpretation</td><td><code>AST.Program</code></td><td>Program output (stdout)</td><td><code>Interpreter</code></td></tr>
+  </table>
+
+  <h3>Design Patterns Used</h3>
+  <ul>
+    <li><strong>Recursive Descent Parsing</strong> — Each grammar rule maps directly to a method in <code>Parser.java</code></li>
+    <li><strong>Discriminated Union via Inheritance</strong> — All AST nodes are inner classes of <code>AST.java</code>, using <code>instanceof</code> dispatch</li>
+    <li><strong>Environment Map</strong> — The interpreter uses <code>Map&lt;String, Object&gt;</code> as a call-stack frame, one per method invocation</li>
+    <li><strong>Superclass Chain Lookup</strong> — Both the type checker and interpreter walk the <code>extends</code> chain for method and field resolution</li>
+  </ul>
+
+  <!-- FILES -->
+  <h2 id="files">Source Files</h2>
+  <div class="tree">
+    <span class="dir">MiniJavaCompiler/</span><br/>
+    &nbsp;&nbsp;├── <span class="dir">src/</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="file">TokenType.java</span> &nbsp;<span class="note">— Enum of all 40+ token types</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="file">Token.java</span> &nbsp;<span class="note">— Token data class (type, value, line, col)</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="file">Lexer.java</span> &nbsp;<span class="note">— Hand-written lexer; handles comments, keywords</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="file">AST.java</span> &nbsp;<span class="note">— All 20+ AST node types as static inner classes</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="file">Parser.java</span> &nbsp;<span class="note">— Recursive-descent parser; precedence climbing for expressions</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="file">TypeChecker.java</span> &nbsp;<span class="note">— Symbol table, type inference, error reporting</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="file">Interpreter.java</span> &nbsp;<span class="note">— Tree-walking evaluator; full OOP + arrays</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="file">CompilerException.java</span> &nbsp;<span class="note">— Unified error class</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; └── <span class="file">MiniJava.java</span> &nbsp;<span class="note">— Main entry point; orchestrates all phases</span><br/>
+    &nbsp;&nbsp;├── <span class="dir">test/</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="file">Factorial.java</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="file">Fibonacci.java</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="file">BubbleSort.java</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="file">Inheritance.java</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="file">LinearSearch.java</span><br/>
+    &nbsp;&nbsp;│&nbsp;&nbsp; └── <span class="file">Counter.java</span><br/>
+    &nbsp;&nbsp;├── <span class="dir">bin/</span> &nbsp;<span class="note">— Compiled .class files (created by build step)</span><br/>
+    &nbsp;&nbsp;├── <span class="file">build.sh</span> &nbsp;<span class="note">— Linux/macOS build script</span><br/>
+    &nbsp;&nbsp;├── <span class="file">build.bat</span> &nbsp;<span class="note">— Windows build script</span><br/>
+    &nbsp;&nbsp;├── <span class="file">run.sh</span> &nbsp;<span class="note">— Linux/macOS run script</span><br/>
+    &nbsp;&nbsp;├── <span class="file">run.bat</span> &nbsp;<span class="note">— Windows run script</span><br/>
+    &nbsp;&nbsp;└── <span class="file">README.md</span> &nbsp;<span class="note">— Quick reference</span>
+  </div>
+
+  <div class="callout ok" style="margin-top:40px;">
+    <span class="callout-icon">✔</span>
+    <div><strong>All 6 test programs pass</strong> — Factorial, Fibonacci, BubbleSort, Inheritance, LinearSearch, and Counter were all verified to produce correct output before this release.</div>
+  </div>
+
+</main>
+</div>
+</body>
+</html>
